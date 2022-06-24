@@ -15,6 +15,7 @@ dependencies:
 
   - pandas
   - scikit-learn
+  - rich
 
   - black
   - isort
