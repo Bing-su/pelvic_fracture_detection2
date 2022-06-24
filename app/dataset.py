@@ -59,7 +59,7 @@ class ImageDataModule(pl.LightningDataModule):
     def __init__(
         self,
         df: pd.DataFrame,
-        img_size: int = 512,
+        img_size: int = 224,
         batch_size: int = 64,
         num_workers: int = 8,
     ):
