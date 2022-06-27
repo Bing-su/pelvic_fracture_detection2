@@ -130,3 +130,5 @@ dmypy.json
 
 data/
 *test.ipynb
+pelvic_fracture_detection2/
+wandb/

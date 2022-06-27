@@ -9,16 +9,16 @@ from torchvision import transforms as T
 from torchvision.io import ImageReadMode, read_image
 
 
-def get_train_transform(size: int = 512):
+def get_train_transform(size: int = 224):
     train_transform = T.Compose(
         [
+            T.Resize([size, size]),
+            # T.CenterCrop(size),
             T.RandomInvert(),
             T.RandomAutocontrast(),
             T.RandomHorizontalFlip(),
             T.RandomVerticalFlip(),
-            T.RandomRotation(30, T.InterpolationMode.BICUBIC),
-            T.Resize(size),
-            T.CenterCrop(size),
+            T.RandomRotation(30),
             T.ConvertImageDtype(torch.float),
             T.Normalize(mean=[0.445], std=[0.269]),
         ]
@@ -26,11 +26,11 @@ def get_train_transform(size: int = 512):
     return train_transform
 
 
-def get_val_transform(size: int = 512):
+def get_val_transform(size: int = 224):
     val_transform = T.Compose(
         [
-            T.Resize(size),
-            T.CenterCrop(size),
+            T.Resize([size, size]),
+            # T.CenterCrop(size),
             T.ConvertImageDtype(torch.float),
             T.Normalize(mean=[0.445], std=[0.269]),
         ]
@@ -39,7 +39,7 @@ def get_val_transform(size: int = 512):
 
 
 class ImageDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, size: int = 512, train: bool = True):
+    def __init__(self, df: pd.DataFrame, size: int = 224, train: bool = True):
         self.df = df.reset_index(drop=True)
         self.size = size
         self.train = train
@@ -49,7 +49,7 @@ class ImageDataset(Dataset):
         return len(self.df)
 
     def __getitem__(self, idx: int):
-        img = read_image(self.df.loc[idx, "image"], read_mode=ImageReadMode.GRAY)
+        img = read_image(self.df.loc[idx, "image"], mode=ImageReadMode.GRAY)
         img = self.transform(img)
         label = self.df.loc[idx, "label"]
         return img, label
@@ -82,6 +82,7 @@ class ImageDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=self.num_workers,
+            pin_memory=True,
         )
 
     def val_dataloader(self):
@@ -90,4 +91,5 @@ class ImageDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=self.num_workers,
+            pin_memory=True,
         )

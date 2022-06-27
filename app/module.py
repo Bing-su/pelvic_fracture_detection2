@@ -2,6 +2,7 @@ import pytorch_lightning as pl
 from timm import create_model
 from timm.optim import create_optimizer_v2
 from torch import nn
+from torchmetrics import F1Score
 
 
 class ImageModel(pl.LightningModule):
@@ -23,6 +24,9 @@ class ImageModel(pl.LightningModule):
         )
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0.1)
 
+        self.train_f1 = F1Score(2, average="macro")
+        self.val_f1 = F1Score(2, average="macro")
+
     def forward(self, x):
         return self.model(x)
 
@@ -38,12 +42,21 @@ class ImageModel(pl.LightningModule):
         x, y = batch
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
-        self.log("train_loss", loss, on_step=True, on_epoch=True)
+        self.train_f1.update(y_hat, y)
+        self.log_dict(
+            {"train_loss": loss, "train_f1": self.train_f1},
+            prog_bar=True,
+            on_step=True,
+            on_epoch=True,
+        )
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self.forward(x)
         loss = self.loss_fn(y_hat, y)
-        self.log("val_loss", loss, prog_bar=True, on_epoch=True)
-        return loss
+        self.val_f1(y_hat, y)
+        self.log_dict(
+            {"val_loss": loss, "val_f1": self.val_f1}, prog_bar=True, on_epoch=True
+        )
+        return {"val_loss": loss, "val_f1": self.val_f1}
