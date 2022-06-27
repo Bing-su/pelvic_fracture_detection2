@@ -8,9 +8,9 @@ from torchmetrics import F1Score
 class ImageModel(pl.LightningModule):
     def __init__(
         self,
-        model_name: str = "resnet50",
-        optimizer_name: str = "madgradw",
-        learning_rate: float = 1e-4,
+        model_name: str = "vit_tiny_patch16_224",
+        optimizer_name: str = "adamw",
+        learning_rate: float = 1e-5,
         weight_decay: float = 1e-4,
     ):
         super().__init__()
@@ -20,7 +20,7 @@ class ImageModel(pl.LightningModule):
         self.weight_decay = weight_decay
 
         self.model = create_model(
-            model_name, pretrained=True, num_classes=2, in_chans=1
+            model_name, pretrained=True, num_classes=2, in_chans=1, img_size=512
         )
         self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0.1)
 

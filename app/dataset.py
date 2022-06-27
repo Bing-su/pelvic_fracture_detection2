@@ -9,11 +9,10 @@ from torchvision import transforms as T
 from torchvision.io import ImageReadMode, read_image
 
 
-def get_train_transform(size: int = 224):
+def get_train_transform(size: int = 512):
     train_transform = T.Compose(
         [
             T.Resize([size, size]),
-            # T.CenterCrop(size),
             T.RandomInvert(),
             T.RandomAutocontrast(),
             T.RandomHorizontalFlip(),
@@ -26,11 +25,10 @@ def get_train_transform(size: int = 224):
     return train_transform
 
 
-def get_val_transform(size: int = 224):
+def get_val_transform(size: int = 512):
     val_transform = T.Compose(
         [
             T.Resize([size, size]),
-            # T.CenterCrop(size),
             T.ConvertImageDtype(torch.float),
             T.Normalize(mean=[0.445], std=[0.269]),
         ]
@@ -39,7 +37,7 @@ def get_val_transform(size: int = 224):
 
 
 class ImageDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, size: int = 224, train: bool = True):
+    def __init__(self, df: pd.DataFrame, size: int = 512, train: bool = True):
         self.df = df.reset_index(drop=True)
         self.size = size
         self.train = train
@@ -59,8 +57,8 @@ class ImageDataModule(pl.LightningDataModule):
     def __init__(
         self,
         df: pd.DataFrame,
-        img_size: int = 224,
-        batch_size: int = 64,
+        img_size: int = 512,
+        batch_size: int = 32,
         num_workers: int = 8,
     ):
         super().__init__()

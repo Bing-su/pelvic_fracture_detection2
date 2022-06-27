@@ -12,14 +12,16 @@ cli = Typer()
 
 @cli.command()
 def train(
-    model_name: str = Option("resnet50", "--model-name", "-m", help="Model name"),
+    model_name: str = Option(
+        "vit_tiny_patch16_224", "--model-name", "-m", help="Model name"
+    ),
     optimizer_name: str = Option(
         "madgradw", "--optimizer-name", "-o", help="Optimizer name"
     ),
     learning_rate: float = Option(1e-4, "--learning-rate", "-l", help="Learning rate"),
     weight_decay: float = Option(1e-4, "--weight-decay", "-w", help="Weight decay"),
     epochs: int = Option(5, "--epochs", "-e", min=1, help="Total epochs"),
-    batch_size: int = Option(64, "--batch-size", "-b", min=1, help="Batch size"),
+    batch_size: int = Option(32, "--batch-size", "-b", min=1, help="Batch size"),
     auto_lr_find: bool = Option(False, help="Auto learning rate find"),
 ):
     model = ImageModel(
@@ -33,7 +35,11 @@ def train(
     datamodule = ImageDataModule(df, batch_size=batch_size)
 
     logger = WandbLogger(name="pelvic-fracture-detection")
-    checkpoints = ModelCheckpoint(monitor="val_f1", mode="max")
+    checkpoints = ModelCheckpoint(
+        monitor="val_f1",
+        mode="max",
+        filename=model_name + "-{epoch:02d}-{val_f1:.3f}",
+    )
 
     trainer = pl.Trainer(
         accelerator="auto",
