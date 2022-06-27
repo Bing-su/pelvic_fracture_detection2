@@ -17,6 +17,8 @@ dependencies:
   - scikit-learn
   - rich
   - typer
+  - opencv
+  - ttach
 
   - black
   - isort
@@ -25,3 +27,6 @@ dependencies:
   - mypy
   - ipywidgets
   - pre-commit
+
+  - pip:
+      - grad-cam
