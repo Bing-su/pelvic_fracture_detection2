@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import pandas as pd
 import pytorch_lightning as pl
-import torch
+from PIL import Image
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
-from torchvision.io import ImageReadMode, read_image
 
 
 def get_train_transform(size: int = 512):
@@ -17,8 +16,8 @@ def get_train_transform(size: int = 512):
             T.RandomAutocontrast(),
             T.RandomHorizontalFlip(),
             T.RandomVerticalFlip(),
-            T.RandomRotation(30),
-            T.ConvertImageDtype(torch.float),
+            T.RandomRotation(30, T.InterpolationMode.BICUBIC),
+            T.ToTensor(),
             T.Normalize(mean=[0.445], std=[0.269]),
         ]
     )
@@ -29,7 +28,7 @@ def get_val_transform(size: int = 512):
     val_transform = T.Compose(
         [
             T.Resize([size, size]),
-            T.ConvertImageDtype(torch.float),
+            T.ToTensor(),
             T.Normalize(mean=[0.445], std=[0.269]),
         ]
     )
@@ -47,7 +46,7 @@ class ImageDataset(Dataset):
         return len(self.df)
 
     def __getitem__(self, idx: int):
-        img = read_image(self.df.loc[idx, "image"], mode=ImageReadMode.GRAY)
+        img = Image.open(self.df.loc[idx, "image"]).convert("L")
         img = self.transform(img)
         label = self.df.loc[idx, "label"]
         return img, label
@@ -59,7 +58,7 @@ class ImageDataModule(pl.LightningDataModule):
         df: pd.DataFrame,
         img_size: int = 512,
         batch_size: int = 32,
-        num_workers: int = 8,
+        num_workers: int = 12,
     ):
         super().__init__()
         self.df = df

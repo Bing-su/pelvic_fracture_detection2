@@ -34,11 +34,11 @@ def train(
     df = pd.read_csv("data/data.csv")
     datamodule = ImageDataModule(df, batch_size=batch_size)
 
-    logger = WandbLogger(name="pelvic-fracture-detection")
+    logger = WandbLogger(name="pelvic-fracture-detection-auroc")
     checkpoints = ModelCheckpoint(
-        monitor="val_f1",
+        monitor="val_AUROC",
         mode="max",
-        filename=model_name + "-{epoch:02d}-{val_f1:.3f}",
+        filename=model_name + "-{epoch:02d}-{val_AUROC:.3f}",
     )
 
     trainer = pl.Trainer(
