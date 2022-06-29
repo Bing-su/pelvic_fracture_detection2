@@ -6,7 +6,6 @@ from PIL import Image
 from pytorch_grad_cam import GradCAMPlusPlus
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-from torchvision.io import ImageReadMode, read_image
 from torchvision.transforms.functional import resize
 
 from app.dataset import get_val_transform
@@ -29,7 +28,7 @@ class ViTGradCam:
     @staticmethod
     def image_to_input(image_path: str) -> torch.Tensor:
         transform = get_val_transform(512)
-        img = read_image(image_path, mode=ImageReadMode.GRAY)
+        img = Image.open(image_path).convert("L")
         inp = transform(img).unsqueeze(0)
         return inp
 
@@ -39,6 +38,7 @@ class ViTGradCam:
             model=self.model,
             target_layers=target_layer,
             reshape_transform=self.reshape_transform,
+            use_cuda=True,
         )
         return grad_cam
 
@@ -46,7 +46,7 @@ class ViTGradCam:
         inp = self.image_to_input(image_path)
         if label is not None:
             label = [ClassifierOutputTarget(label)]
-        return self.grad_cam(inp, label)
+        return self.grad_cam(inp, label, aug_smooth=True)
 
     def visualize(self, image_path: str, label: Optional[int] = None):
         cam = self.get_cam(image_path, label)[0]
@@ -59,3 +59,14 @@ class ViTGradCam:
         return Image.fromarray(vis)
 
     __call__ = visualize
+
+
+class DenseNetGradCam(ViTGradCam):
+    def _get_grad_cam(self) -> GradCAMPlusPlus:
+        target_layer = [self.model.features[-1]]
+        grad_cam = GradCAMPlusPlus(
+            model=self.model,
+            target_layers=target_layer,
+            use_cuda=True,
+        )
+        return grad_cam
