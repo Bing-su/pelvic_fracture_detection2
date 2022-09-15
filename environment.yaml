@@ -1,6 +1,5 @@
 channels:
   - pytorch
-  - fastai
   - conda-forge
   - defaults
 dependencies:
@@ -9,7 +8,6 @@ dependencies:
 
   - pytorch
   - pytorch-lightning
-  - timm
   - torchvision
   - wandb
 
@@ -17,8 +15,7 @@ dependencies:
   - scikit-learn
   - rich
   - typer
-  - opencv
-  - ttach
+  - loguru
 
   - black
   - isort
@@ -29,4 +26,4 @@ dependencies:
   - pre-commit
 
   - pip:
-      - grad-cam
+      - timm
