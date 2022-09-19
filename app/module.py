@@ -12,7 +12,7 @@ class ImageModel(pl.LightningModule):
         model_name: str = "vit_tiny_patch16_224",
         optimizer_name: str = "madgradw",
         learning_rate: float = 1e-4,
-        weight_decay: float = 1e-4,
+        weight_decay: float = 1e-5,
         img_size: int = 512,
     ):
         super().__init__()
@@ -55,13 +55,24 @@ class ImageModel(pl.LightningModule):
             lr=self.learning_rate,
         )
 
-        scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        # scheduler = torch.optim.lr_scheduler.OneCycleLR(
+        #     optimizer,
+        #     0.01,
+        #     total_steps=self.trainer.estimated_stepping_batches,
+        #     cycle_momentum=False,
+        # )
+        # scheduler_config = {"scheduler": scheduler, "interval": "step"}
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             optimizer,
-            0.1,
-            total_steps=self.trainer.estimated_stepping_batches,
-            cycle_momentum=False,
+            mode="max",
+            patience=3,
         )
-        return [optimizer], [scheduler]
+        scheduler_config = {
+            "scheduler": scheduler,
+            "interval": "epoch",
+            "monitor": "val_AUROC",
+        }
+        return [optimizer], [scheduler_config]
 
     def training_step(self, batch, batch_idx):
         x, y = batch
@@ -69,8 +80,8 @@ class ImageModel(pl.LightningModule):
         prob = torch.softmax(y_hat, dim=1)[:, 1]
         loss = self.loss_fn(prob, y)
 
-        self.train_f1.update(y_hat, y)
-        self.train_AUROC.update(prob, y)
+        self.train_f1(y_hat, y)
+        self.train_AUROC(prob, y)
         self.log_dict(
             {
                 "train_loss": loss,
@@ -89,8 +100,8 @@ class ImageModel(pl.LightningModule):
         prob = torch.softmax(y_hat, dim=1)[:, 1]
         loss = self.loss_fn(prob, y)
 
-        self.val_f1.update(y_hat, y)
-        self.val_AUROC.update(prob, y)
+        self.val_f1(y_hat, y)
+        self.val_AUROC(prob, y)
         self.log_dict(
             {"val_loss": loss, "val_AUROC": self.val_AUROC, "val_f1": self.val_f1},
             prog_bar=True,
