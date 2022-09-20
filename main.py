@@ -82,7 +82,7 @@ def train(
     trainer = pl.Trainer(
         accelerator="auto",
         logger=wandb_logger,
-        log_every_n_steps=50,
+        log_every_n_steps=100,
         devices=1,
         callbacks=[RichProgressBar(), LearningRateMonitor("step"), checkpoints],
         precision=16,
@@ -96,6 +96,9 @@ def train(
         trainer.tune(model, datamodule=datamodule)
 
     logger.info("Training started.")
+    if auto_lr_find:
+        trainer.tune(model, datamodule=datamodule)
+
     trainer.fit(model, datamodule=datamodule)
     logger.info("Training finished.")
 

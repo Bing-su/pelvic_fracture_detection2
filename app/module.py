@@ -65,7 +65,7 @@ class ImageModel(pl.LightningModule):
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             optimizer,
             mode="max",
-            patience=3,
+            patience=10,
         )
         scheduler_config = {
             "scheduler": scheduler,
@@ -80,8 +80,8 @@ class ImageModel(pl.LightningModule):
         prob = torch.softmax(y_hat, dim=1)[:, 1]
         loss = self.loss_fn(prob, y)
 
-        self.train_f1(y_hat, y)
-        self.train_AUROC(prob, y)
+        self.train_f1.update(y_hat, y)
+        self.train_AUROC.update(prob, y)
         self.log_dict(
             {
                 "train_loss": loss,
@@ -100,8 +100,8 @@ class ImageModel(pl.LightningModule):
         prob = torch.softmax(y_hat, dim=1)[:, 1]
         loss = self.loss_fn(prob, y)
 
-        self.val_f1(y_hat, y)
-        self.val_AUROC(prob, y)
+        self.val_f1.update(y_hat, y)
+        self.val_AUROC.update(prob, y)
         self.log_dict(
             {"val_loss": loss, "val_AUROC": self.val_AUROC, "val_f1": self.val_f1},
             prog_bar=True,
