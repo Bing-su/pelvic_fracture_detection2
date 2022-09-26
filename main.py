@@ -55,6 +55,7 @@ def train(
     project_name: Optional[str] = Option(
         None, "--project-name", "-p", help="Project name"
     ),
+    seed: Optional[int] = Option(None, "--seed", "-s", help="Seed"),
 ):
     model = ImageModel(
         model_name=model_name,
@@ -78,6 +79,10 @@ def train(
         mode="max",
         filename=f"{model_name}-{learning_rate}" + "-{epoch:02d}-{val_AUROC:.3f}",
     )
+
+    if seed is not None:
+        pl.seed_everything(seed)
+        logger.info(f"seed: {seed}")
 
     trainer = pl.Trainer(
         accelerator="auto",
